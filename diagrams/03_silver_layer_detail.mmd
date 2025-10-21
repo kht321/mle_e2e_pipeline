@@ -1,0 +1,92 @@
+%%{init: {'theme':'base', 'themeVariables': { 'primaryColor':'#C0C0C0','primaryTextColor':'#000','primaryBorderColor':'#808080','lineColor':'#4169E1','secondaryColor':'#006100','tertiaryColor':'#fff'}}}%%
+
+graph TB
+    subgraph "BRONZE INPUT"
+        B1[fa:fa-database Bronze Attributes<br/>Raw customer data]
+        B2[fa:fa-database Bronze Financials<br/>Raw financial data]
+        B3[fa:fa-database Bronze Clickstream<br/>Raw engagement data]
+        B4[fa:fa-database Bronze Loans<br/>Raw loan performance]
+    end
+
+    subgraph "SILVER PROCESSOR"
+        SP[fa:fa-cog Silver Processor Class<br/>silver_processing.py]
+
+        subgraph "Attributes Cleaning"
+            A1[fa:fa-user-check Age Validation<br/>Convert to numeric]
+            A2[fa:fa-sort Age Bounds Check<br/>18 ≤ Age ≤ 75]
+            A3[fa:fa-id-card SSN Validation<br/>Pattern: XXX-XX-XXXX]
+            A4[fa:fa-trash Remove PII<br/>SSN for privacy]
+            A5[fa:fa-map-marker Occupation Standardize<br/>Lowercase, strip spaces]
+        end
+
+        subgraph "Financials Cleaning"
+            F1[fa:fa-dollar Type Conversion<br/>String → Float64]
+            F2[fa:fa-calculator Null Handling<br/>Median imputation]
+            F3[fa:fa-exclamation Range Validation<br/>Income > 0, Debt ≥ 0]
+            F4[fa:fa-percentage Credit Score Normalization<br/>0-850 scale]
+        end
+
+        subgraph "Clickstream Cleaning"
+            C1[fa:fa-mouse-pointer Feature Validation<br/>20 engagement metrics]
+            C2[fa:fa-hashtag Count Constraints<br/>≥ 0 for all counts]
+            C3[fa:fa-calendar Date Standardization<br/>ISO 8601 format]
+        end
+
+        subgraph "Loans Cleaning"
+            L1[fa:fa-money-bill MOB Calculation<br/>Months on Books]
+            L2[fa:fa-exclamation-triangle DPD Calculation<br/>Days Past Due]
+            L3[fa:fa-tags Label Creation<br/>Default = DPD ≥ 30]
+            L4[fa:fa-chart-line Overdue Amount<br/>Track outstanding debt]
+        end
+    end
+
+    subgraph "DATA QUALITY CHECKS"
+        Q1[fa:fa-check-circle Missing Values<br/>< 5% threshold]
+        Q2[fa:fa-chart-bar Distribution Checks<br/>Outlier detection]
+        Q3[fa:fa-balance-scale Data Types Consistent<br/>Float64, Int64, Object]
+    end
+
+    subgraph "SILVER STORAGE"
+        S1[fa:fa-database datamart/silver/attributes/<br/>Cleaned customer data]
+        S2[fa:fa-database datamart/silver/financials/<br/>Cleaned financial data]
+        S3[fa:fa-database datamart/silver/clickstream/<br/>Cleaned engagement data]
+        S4[fa:fa-database datamart/silver/loans/<br/>Cleaned loan data with labels]
+    end
+
+    subgraph "KEY FIXES APPLIED"
+        FIX1[fa:fa-wrench Fix #1: Age Type Conversion<br/>pd.to_numeric before comparison]
+        FIX2[fa:fa-wrench Fix #2: Categorical Handling<br/>Add 'Unknown' to categories]
+    end
+
+    %% Flow
+    B1 --> SP --> A1 --> A2 --> A3 --> A4 --> A5
+    B2 --> SP --> F1 --> F2 --> F3 --> F4
+    B3 --> SP --> C1 --> C2 --> C3
+    B4 --> SP --> L1 --> L2 --> L3 --> L4
+
+    A5 --> Q1
+    F4 --> Q1
+    C3 --> Q1
+    L4 --> Q1
+
+    Q1 --> Q2 --> Q3
+
+    Q3 --> S1 & S2 & S3 & S4
+
+    FIX1 -.->|Applied to| A1
+    FIX2 -.->|Applied to| A5
+
+    %% Styling
+    classDef bronzeClass fill:#CD7F32,stroke:#8B4513,stroke-width:2px,color:#fff
+    classDef silverClass fill:#C0C0C0,stroke:#808080,stroke-width:3px,color:#000
+    classDef processClass fill:#4169E1,stroke:#000080,stroke-width:2px,color:#fff
+    classDef qualityClass fill:#32CD32,stroke:#006400,stroke-width:2px,color:#fff
+    classDef storageClass fill:#4682B4,stroke:#000080,stroke-width:2px,color:#fff
+    classDef fixClass fill:#FF6347,stroke:#8B0000,stroke-width:2px,color:#fff
+
+    class B1,B2,B3,B4 bronzeClass
+    class SP silverClass
+    class A1,A2,A3,A4,A5,F1,F2,F3,F4,C1,C2,C3,L1,L2,L3,L4 processClass
+    class Q1,Q2,Q3 qualityClass
+    class S1,S2,S3,S4 storageClass
+    class FIX1,FIX2 fixClass

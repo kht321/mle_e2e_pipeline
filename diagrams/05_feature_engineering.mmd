@@ -1,0 +1,94 @@
+%%{init: {'theme':'base', 'themeVariables': { 'primaryColor':'#FFD700','primaryTextColor':'#000','primaryBorderColor':'#DAA520','lineColor':'#32CD32','secondaryColor':'#006100','tertiaryColor':'#fff'}}}%%
+
+graph TB
+    subgraph "INPUT DATA"
+        I1[fa:fa-database Silver Attributes<br/>Age, Occupation, etc.]
+        I2[fa:fa-database Silver Financials<br/>Income, Debt, EMI, etc.]
+        I3[fa:fa-database Silver Clickstream<br/>Engagement metrics]
+    end
+
+    subgraph "FEATURE ENGINEERING PIPELINE"
+        FE[fa:fa-wrench Gold Processor<br/>gold_processing.py]
+
+        subgraph "Financial Features (28 features)"
+            FF1[fa:fa-chart-line Log Transformations<br/>log_annual_income<br/>log_monthly_salary]
+            FF2[fa:fa-percent Financial Ratios<br/>debt_to_income<br/>emi_to_salary<br/>balance_to_debt]
+            FF3[fa:fa-coins Investment Metrics<br/>investment_to_income<br/>amount_invested_monthly]
+            FF4[fa:fa-credit-card Credit Metrics<br/>total_financial_products<br/>loans_per_credit_product]
+            FF5[fa:fa-clock Temporal Metrics<br/>inquiries_per_month<br/>delayed_payments_per_month]
+        end
+
+        subgraph "Clickstream Features (60 features)"
+            CF1[fa:fa-calendar 6-Month Rolling Windows<br/>fe_1 to fe_20 categories]
+            CF2[fa:fa-calculator Aggregation Functions<br/>Mean, Max, Sum]
+            CF3[fa:fa-hashtag 20 metrics × 3 functions<br/>= 60 engagement features]
+            CF4[fa:fa-chart-area Examples:<br/>fe_1_mean, fe_1_max, fe_1_sum<br/>fe_2_mean, fe_2_max, fe_2_sum]
+        end
+
+        subgraph "Core Features (6 features)"
+            CORE[fa:fa-user Original Features<br/>Age<br/>Annual_Income<br/>Monthly_Inhand_Salary<br/>+ 20 more base features]
+        end
+    end
+
+    subgraph "OUTLIER HANDLING"
+        OH1[fa:fa-chart-bar Cap Outliers<br/>Quantile-based method]
+        OH2[fa:fa-adjust Lower: 1st percentile<br/>Upper: 95th percentile]
+        OH3[fa:fa-check 82 numeric columns capped]
+    end
+
+    subgraph "MISSING VALUE IMPUTATION"
+        MV1[fa:fa-question-circle Categorical Columns<br/>fillna with 'Unknown']
+        MV2[fa:fa-hashtag Numeric Columns<br/>fillna with median]
+        MV3[fa:fa-wrench Categorical Fix Applied<br/>Add 'Unknown' to categories first]
+    end
+
+    subgraph "FINAL FEATURE SET"
+        FS1[fa:fa-database 94 Total Features<br/>Ready for ML]
+
+        subgraph "Feature Breakdown"
+            FB1[6 Core Attributes]
+            FB2[22 Base Financial Features]
+            FB3[6 Engineered Financial Ratios]
+            FB4[60 Clickstream Aggregations]
+            FB5[94 Total Features]
+        end
+    end
+
+    subgraph "SEPARATE STORES"
+        FEAT[fa:fa-table Feature Store<br/>Customer_ID + 94 features<br/>NO LABEL COLUMN]
+        LAB[fa:fa-tags Label Store<br/>Customer_ID + label + dpd<br/>+ overdue_amt]
+    end
+
+    %% Flow
+    I1 & I2 --> FE
+    I3 --> FE
+
+    FE --> FF1 & FF2 & FF3 & FF4 & FF5
+    FE --> CF1 --> CF2 --> CF3 --> CF4
+    FE --> CORE
+
+    FF1 & FF2 & FF3 & FF4 & FF5 --> OH1
+    CF4 --> OH1
+    CORE --> OH1
+
+    OH1 --> OH2 --> OH3 --> MV1
+    MV1 --> MV2 --> MV3
+
+    MV3 --> FS1
+    FS1 --> FB1 --> FB2 --> FB3 --> FB4 --> FB5
+
+    FB5 --> FEAT
+    FB5 --> LAB
+
+    %% Styling
+    classDef inputClass fill:#87CEEB,stroke:#4682B4,stroke-width:2px,color:#000
+    classDef goldClass fill:#FFD700,stroke:#DAA520,stroke-width:3px,color:#000
+    classDef featureClass fill:#98FB98,stroke:#32CD32,stroke-width:2px,color:#000
+    classDef processClass fill:#FFA500,stroke:#FF8C00,stroke-width:2px,color:#000
+    classDef outputClass fill:#9370DB,stroke:#4B0082,stroke-width:2px,color:#fff
+
+    class I1,I2,I3 inputClass
+    class FE goldClass
+    class FF1,FF2,FF3,FF4,FF5,CF1,CF2,CF3,CF4,CORE featureClass
+    class OH1,OH2,OH3,MV1,MV2,MV3 processClass
+    class FS1,FB1,FB2,FB3,FB4,FB5,FEAT,LAB outputClass

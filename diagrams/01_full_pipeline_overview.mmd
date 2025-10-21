@@ -1,0 +1,105 @@
+%%{init: {'theme':'base', 'themeVariables': { 'primaryColor':'#003366','primaryTextColor':'#fff','primaryBorderColor':'#7C0000','lineColor':'#F8B229','secondaryColor':'#006100','tertiaryColor':'#fff'}}}%%
+
+graph TB
+    subgraph "DATA SOURCES"
+        A1[fa:fa-database Attributes CSV<br/>Customer Demographics]
+        A2[fa:fa-database Financials CSV<br/>Income, Debt, EMI]
+        A3[fa:fa-database Clickstream CSV<br/>User Engagement]
+        A4[fa:fa-database Loans CSV<br/>Loan Performance]
+    end
+
+    subgraph "BRONZE LAYER - Raw Ingestion"
+        B1[fa:fa-file-archive Bronze Processor<br/>Parquet Storage]
+        B2[fa:fa-check-circle Schema Validation]
+        B3[fa:fa-chart-bar Row Count Checks]
+        B4[fa:fa-exclamation-triangle Duplicate Detection]
+    end
+
+    subgraph "SILVER LAYER - Data Cleaning"
+        S1[fa:fa-broom Attributes Cleaning<br/>Age bounds, SSN validation]
+        S2[fa:fa-dollar Financials Cleaning<br/>Null handling, type conversion]
+        S3[fa:fa-mouse-pointer Clickstream Cleaning<br/>Feature validation]
+        S4[fa:fa-money-bill Loans Cleaning<br/>MOB/DPD calculation]
+    end
+
+    subgraph "GOLD LAYER - Feature Engineering"
+        G1[fa:fa-calendar-alt Multi-Snapshot Join<br/>Temporal Alignment T+6]
+        G2[fa:fa-calculator Financial Features<br/>94 Engineered Features]
+        G3[fa:fa-chart-line Clickstream Aggregations<br/>6-month rolling windows]
+        G4[fa:fa-database Feature Store<br/>10,253 samples]
+        G5[fa:fa-tags Label Store<br/>Default labels MOB=6]
+    end
+
+    subgraph "MODEL TRAINING"
+        T1[fa:fa-brain Train 4 Algorithms<br/>LR, RF, XGB, LGBM]
+        T2[fa:fa-trophy Select Best Model<br/>ROC-AUC: 0.869]
+        T3[fa:fa-save Model Artifacts<br/>best_model.joblib]
+        T4[fa:fa-file-alt Metadata Storage<br/>metrics, version, timestamp]
+    end
+
+    subgraph "MODEL INFERENCE"
+        I1[fa:fa-upload Load Best Model<br/>from Model Store]
+        I2[fa:fa-cogs Batch Predictions<br/>All 25 snapshots]
+        I3[fa:fa-table Prediction Store<br/>Parquet + CSV]
+    end
+
+    subgraph "MODEL MONITORING"
+        M1[fa:fa-chart-bar Performance Metrics<br/>Accuracy, Precision, Recall]
+        M2[fa:fa-exclamation Stability Metrics<br/>PSI, KS Statistics]
+        M3[fa:fa-file-code Evidently AI Report<br/>8.2 MB HTML]
+    end
+
+    subgraph "VISUALIZATIONS"
+        V1[fa:fa-line-chart Performance Over Time]
+        V2[fa:fa-balance-scale Default Rate Comparison]
+        V3[fa:fa-random Stability Metrics]
+        V4[fa:fa-th Confusion Matrix Evolution]
+        V5[fa:fa-tachometer-alt Monitoring Dashboard]
+    end
+
+    subgraph "ORCHESTRATION"
+        O1[fa:fa-project-diagram Apache Airflow DAG<br/>7 Tasks]
+        O2[fa:fa-calendar Scheduled Runs<br/>Monthly backfill]
+        O3[fa:fa-docker Docker Containers<br/>PostgreSQL + Airflow]
+    end
+
+    %% Data flow
+    A1 & A2 & A3 & A4 --> B1
+    B1 --> B2 --> B3 --> B4
+    B4 --> S1 & S2 & S3 & S4
+
+    S1 & S2 & S3 --> G1
+    S4 --> G1
+    G1 --> G2 --> G3
+    G3 --> G4 & G5
+
+    G4 & G5 --> T1
+    T1 --> T2 --> T3 --> T4
+
+    T3 --> I1
+    G4 --> I2
+    I1 --> I2 --> I3
+
+    I3 --> M1 --> M3
+    G5 --> M2 --> M3
+
+    M3 --> V1 & V2 & V3 & V4 & V5
+
+    O1 -.-> B1 & S1 & G1 & T1 & I1 & M1
+    O2 -.-> O1
+    O3 -.-> O1
+
+    %% Styling
+    classDef bronzeClass fill:#CD7F32,stroke:#8B4513,stroke-width:2px,color:#fff
+    classDef silverClass fill:#C0C0C0,stroke:#808080,stroke-width:2px,color:#000
+    classDef goldClass fill:#FFD700,stroke:#DAA520,stroke-width:2px,color:#000
+    classDef modelClass fill:#4169E1,stroke:#000080,stroke-width:2px,color:#fff
+    classDef monitorClass fill:#32CD32,stroke:#006400,stroke-width:2px,color:#000
+    classDef orchClass fill:#9370DB,stroke:#4B0082,stroke-width:2px,color:#fff
+
+    class B1,B2,B3,B4 bronzeClass
+    class S1,S2,S3,S4 silverClass
+    class G1,G2,G3,G4,G5 goldClass
+    class T1,T2,T3,T4,I1,I2,I3 modelClass
+    class M1,M2,M3,V1,V2,V3,V4,V5 monitorClass
+    class O1,O2,O3 orchClass

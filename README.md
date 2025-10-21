@@ -74,6 +74,21 @@ Raw Data (CSV)
 | Configuration | YAML | Centralized config management |
 | Testing | pytest | Unit and integration tests |
 
+### Architecture Diagrams
+
+Comprehensive Mermaid diagrams documenting the entire pipeline architecture:
+
+1. **[Full Pipeline Overview](diagrams/01_full_pipeline_overview.mmd)** - End-to-end data flow from raw sources to monitoring
+2. **[Bronze Layer Detail](diagrams/02_bronze_layer_detail.mmd)** - Raw data ingestion and validation process
+3. **[Silver Layer Detail](diagrams/03_silver_layer_detail.mmd)** - Data cleaning and quality checks
+4. **[Gold Layer Temporal Join](diagrams/04_gold_layer_temporal_join.mmd)** - Multi-snapshot temporal alignment (prevents data leakage)
+5. **[Feature Engineering](diagrams/05_feature_engineering.mmd)** - 94 engineered features creation process
+6. **[Model Training Detail](diagrams/06_model_training_detail.mmd)** - Multi-algorithm training and selection
+7. **[Model Monitoring Detail](diagrams/07_model_monitoring_detail.mmd)** - Performance and drift tracking with Evidently AI
+8. **[Airflow DAG Orchestration](diagrams/08_airflow_dag_orchestration.mmd)** - Task dependencies and execution flow
+
+> **Note:** These Mermaid diagrams can be rendered directly in GitHub or using tools like [Mermaid Live Editor](https://mermaid.live/).
+
 ---
 
 ## 📊 Features
@@ -450,12 +465,6 @@ Detects data drift and distribution shifts:
 - Easy to experiment with different thresholds
 
 **Benefit:** Flexibility without code changes
-
-### ✅ Production-Ready from Day 1
-- Comprehensive error handling
-- Structured logging
-- Unit tests
-- Documentation
 
 ### ✅ Production-Ready from Day 1
 - Comprehensive error handling

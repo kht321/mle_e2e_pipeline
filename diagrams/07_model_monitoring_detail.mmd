@@ -1,0 +1,125 @@
+%%{init: {'theme':'base', 'themeVariables': { 'primaryColor':'#32CD32','primaryTextColor':'#fff','primaryBorderColor':'#006400','lineColor':'#FFD700','secondaryColor':'#006100','tertiaryColor':'#fff'}}}%%
+
+graph TB
+    subgraph "INPUT DATA"
+        I1[fa:fa-database Predictions Store<br/>10,253 predictions]
+        I2[fa:fa-tags Label Store<br/>Actual outcomes]
+        I3[fa:fa-table Feature Store<br/>For drift detection]
+    end
+
+    subgraph "MODEL MONITORING ENGINE"
+        MME[fa:fa-tachometer-alt Model Monitor<br/>model_monitoring.py]
+
+        subgraph "Performance Metrics"
+            PM1[fa:fa-percent Calculate Accuracy<br/>Correct predictions / Total]
+            PM2[fa:fa-crosshairs Calculate Precision<br/>TP / (TP + FP)]
+            PM3[fa:fa-check-double Calculate Recall<br/>TP / (TP + FN)]
+            PM4[fa:fa-balance-scale Calculate F1-Score<br/>Harmonic mean of P & R]
+            PM5[fa:fa-chart-area Calculate ROC-AUC<br/>Area under ROC curve]
+            PM6[fa:fa-chart-line Calculate PR-AUC<br/>Area under PR curve]
+        end
+
+        subgraph "Stability Metrics"
+            SM1[fa:fa-exchange-alt PSI Calculation<br/>Population Stability Index]
+            SM2[fa:fa-random KS Statistic<br/>Kolmogorov-Smirnov]
+            SM3[fa:fa-chart-bar Prediction Drift<br/>Distribution changes]
+            SM4[fa:fa-tags Label Drift<br/>Target distribution shift]
+        end
+
+        subgraph "Evidently AI Integration"
+            EV1[fa:fa-cog Configure Evidently<br/>Test suites & metrics]
+            EV2[fa:fa-database Define Reference Data<br/>Training period baseline]
+            EV3[fa:fa-calendar Define Current Data<br/>Each monthly snapshot]
+            EV4[fa:fa-play Run Test Suites<br/>Data quality, drift, performance]
+        end
+    end
+
+    subgraph "PSI CALCULATION DETAIL"
+        PSI[fa:fa-calculator PSI Formula]
+        PSI1[fa:fa-divide For each feature bin<br/>PSI_i = (Actual% - Expected%) × ln(Actual% / Expected%)]
+        PSI2[fa:fa-sum Total PSI = Σ PSI_i]
+        PSI3[fa:fa-exclamation-triangle Thresholds<br/>< 0.1: No drift<br/>0.1-0.25: Warning<br/>> 0.25: Critical]
+    end
+
+    subgraph "KS STATISTIC DETAIL"
+        KS[fa:fa-chart-line KS Formula]
+        KS1[fa:fa-wave-square Max difference between<br/>Cumulative distributions]
+        KS2[fa:fa-exclamation-triangle Thresholds<br/>< 0.2: Stable<br/>0.2-0.3: Monitor<br/>> 0.3: Action needed]
+    end
+
+    subgraph "MONITORING OUTPUTS"
+        OUT1[fa:fa-file-csv performance_metrics.csv<br/>Snapshot-level metrics<br/>25 rows × 10 columns]
+        OUT2[fa:fa-file-csv stability_metrics.csv<br/>PSI/KS per snapshot<br/>25 rows × feature columns]
+        OUT3[fa:fa-file-code model_monitoring_report.html<br/>Evidently AI interactive report<br/>8.2 MB]
+    end
+
+    subgraph "VISUALIZATIONS"
+        VIZ[fa:fa-chart-bar Visualizer<br/>visualizations.py]
+
+        subgraph "6 Charts Generated"
+            V1[fa:fa-line-chart Performance Over Time<br/>ROC-AUC, Accuracy, F1 trends]
+            V2[fa:fa-chart-area Default Rate Comparison<br/>Actual vs Predicted]
+            V3[fa:fa-random Stability Metrics<br/>PSI & KS evolution]
+            V4[fa:fa-th Confusion Matrix Evolution<br/>TP, TN, FP, FN over time]
+            V5[fa:fa-bar-chart Sample Counts<br/>Volume per snapshot]
+            V6[fa:fa-tachometer-alt Monitoring Dashboard<br/>Combined overview]
+        end
+    end
+
+    subgraph "ALERTING SYSTEM"
+        ALR1{fa:fa-bell Check Thresholds}
+        ALR2[fa:fa-check-circle Normal<br/>All metrics within range]
+        ALR3[fa:fa-exclamation-triangle Warning<br/>ROC-AUC < 0.80 or PSI > 0.1]
+        ALR4[fa:fa-times-circle Critical<br/>ROC-AUC < 0.75 or PSI > 0.25]
+        ALR5[fa:fa-envelope Trigger Alerts<br/>Email/Slack notifications]
+    end
+
+    subgraph "DRIFT ANALYSIS RESULTS"
+        DR1[fa:fa-info Mean PSI: 0.067 - 0.409]
+        DR2[fa:fa-info High Drift Features<br/>Clickstream: fe_4, fe_5, fe_10]
+        DR3[fa:fa-check Core Features Stable<br/>Financial metrics PSI < 0.15]
+        DR4[fa:fa-thumbs-up Conclusion: No critical drift<br/>Model remains valid]
+    end
+
+    %% Flow
+    I1 & I2 & I3 --> MME
+
+    MME --> PM1 & PM2 & PM3 & PM4 & PM5 & PM6
+    MME --> SM1 & SM2 & SM3 & SM4
+    MME --> EV1 --> EV2 --> EV3 --> EV4
+
+    SM1 --> PSI --> PSI1 --> PSI2 --> PSI3
+    SM2 --> KS --> KS1 --> KS2
+
+    PM1 & PM2 & PM3 & PM4 & PM5 & PM6 --> OUT1
+    SM1 & SM2 & SM3 & SM4 --> OUT2
+    EV4 --> OUT3
+
+    OUT1 & OUT2 & OUT3 --> VIZ
+
+    VIZ --> V1 & V2 & V3 & V4 & V5 & V6
+
+    OUT1 & OUT2 --> ALR1
+    ALR1 -->|All Good| ALR2
+    ALR1 -->|Minor Issues| ALR3 --> ALR5
+    ALR1 -->|Major Issues| ALR4 --> ALR5
+
+    SM1 & SM2 --> DR1 --> DR2 --> DR3 --> DR4
+
+    %% Styling
+    classDef inputClass fill:#87CEEB,stroke:#4682B4,stroke-width:2px,color:#000
+    classDef monitorClass fill:#32CD32,stroke:#006400,stroke-width:3px,color:#fff
+    classDef metricsClass fill:#98FB98,stroke:#228B22,stroke-width:2px,color:#000
+    classDef outputClass fill:#9370DB,stroke:#4B0082,stroke-width:2px,color:#fff
+    classDef vizClass fill:#FFD700,stroke:#DAA520,stroke-width:2px,color:#000
+    classDef alertClass fill:#FF6347,stroke:#DC143C,stroke-width:2px,color:#fff
+    classDef successClass fill:#7CFC00,stroke:#32CD32,stroke-width:2px,color:#000
+
+    class I1,I2,I3 inputClass
+    class MME monitorClass
+    class PM1,PM2,PM3,PM4,PM5,PM6,SM1,SM2,SM3,SM4,EV1,EV2,EV3,EV4 metricsClass
+    class PSI,PSI1,PSI2,PSI3,KS,KS1,KS2 metricsClass
+    class OUT1,OUT2,OUT3 outputClass
+    class VIZ,V1,V2,V3,V4,V5,V6 vizClass
+    class ALR3,ALR4,ALR5 alertClass
+    class ALR2,DR3,DR4 successClass

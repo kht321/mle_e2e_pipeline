@@ -1,0 +1,89 @@
+%%{init: {'theme':'base', 'themeVariables': { 'primaryColor':'#FFD700','primaryTextColor':'#000','primaryBorderColor':'#DAA520','lineColor':'#DC143C','secondaryColor':'#006100','tertiaryColor':'#fff'}}}%%
+
+graph TB
+    subgraph "TEMPORAL LEAKAGE PREVENTION"
+        TL[fa:fa-exclamation-triangle CRITICAL REQUIREMENT<br/>No future information in training!]
+    end
+
+    subgraph "FEATURE SNAPSHOTS [Time T]"
+        F1[fa:fa-calendar 2023-01-01<br/>Customer features]
+        F2[fa:fa-calendar 2023-02-01<br/>Customer features]
+        F3[fa:fa-calendar 2023-03-01<br/>Customer features]
+        F4[fa:fa-calendar ...]
+        F5[fa:fa-calendar 2024-12-01<br/>Customer features]
+    end
+
+    subgraph "MULTI-SNAPSHOT TEMPORAL JOIN"
+        JOIN[fa:fa-code Multi-Snapshot Join Logic<br/>gold_processing.py:multi_snapshot_join]
+
+        subgraph "Join Algorithm"
+            J1[fa:fa-arrow-right For each feature_date]
+            J2[fa:fa-calculator Calculate label_date<br/>= feature_date + 6 months]
+            J3{fa:fa-question Does label_date<br/>exist in loan data?}
+            J4[fa:fa-link Join features[T] with labels[T+6]]
+            J5[fa:fa-times Skip if label unavailable]
+            J6[fa:fa-check Validate: All feature_date < label_date]
+        end
+    end
+
+    subgraph "LABEL SNAPSHOTS [Time T+6]"
+        L1[fa:fa-calendar 2023-07-01<br/>Loan outcomes MOB=6]
+        L2[fa:fa-calendar 2023-08-01<br/>Loan outcomes MOB=6]
+        L3[fa:fa-calendar 2023-09-01<br/>Loan outcomes MOB=6]
+        L4[fa:fa-calendar ...]
+        L5[fa:fa-calendar 2025-06-01<br/>Loan outcomes MOB=6]
+    end
+
+    subgraph "TEMPORAL ALIGNMENT VALIDATION"
+        V1[fa:fa-check-circle Example Valid Pair<br/>Features: 2023-01-01<br/>Labels: 2023-07-01]
+        V2[fa:fa-times-circle Example Invalid Pair<br/>Features: 2024-12-01<br/>Labels: No data for 2025-06-01]
+        V3[fa:fa-exclamation Validation Rule<br/>feature_date + 6 months = label_date<br/>EXACTLY 6 months gap]
+    end
+
+    subgraph "JOINED DATASET"
+        OUT1[fa:fa-database Gold Feature Store<br/>94 features x 10,253 samples]
+        OUT2[fa:fa-tags Gold Label Store<br/>Default labels x 10,253 samples]
+        OUT3[fa:fa-info Metadata Columns<br/>Customer_ID, feature_snapshot_date<br/>label_snapshot_date]
+    end
+
+    subgraph "DATA LEAKAGE CHECK"
+        CHK1[fa:fa-shield-alt Zero Leakage Confirmed<br/>✓ All features precede labels by 6 months<br/>✓ No overlapping time periods<br/>✓ Train/test temporal split enforced]
+    end
+
+    %% Flow
+    TL -.-> JOIN
+
+    F1 & F2 & F3 & F4 & F5 --> JOIN
+    L1 & L2 & L3 & L4 & L5 --> JOIN
+
+    JOIN --> J1 --> J2 --> J3
+    J3 -->|Yes| J4 --> J6
+    J3 -->|No| J5
+
+    J6 --> V1 & V2 & V3
+
+    V3 --> OUT1 & OUT2 & OUT3
+
+    OUT1 & OUT2 & OUT3 --> CHK1
+
+    %% Specific examples
+    F1 -.->|Paired with| L1
+    F2 -.->|Paired with| L2
+    F5 -.->|No label| V2
+
+    %% Styling
+    classDef featureClass fill:#87CEEB,stroke:#4682B4,stroke-width:2px,color:#000
+    classDef labelClass fill:#FFB6C1,stroke:#DC143C,stroke-width:2px,color:#000
+    classDef joinClass fill:#FFD700,stroke:#DAA520,stroke-width:3px,color:#000
+    classDef validClass fill:#32CD32,stroke:#006400,stroke-width:2px,color:#fff
+    classDef invalidClass fill:#DC143C,stroke:#8B0000,stroke-width:2px,color:#fff
+    classDef outputClass fill:#9370DB,stroke:#4B0082,stroke-width:2px,color:#fff
+    classDef alertClass fill:#FF6347,stroke:#8B0000,stroke-width:2px,color:#fff
+
+    class F1,F2,F3,F4,F5 featureClass
+    class L1,L2,L3,L4,L5 labelClass
+    class JOIN,J1,J2,J3,J4,J6 joinClass
+    class V1,J4,CHK1 validClass
+    class V2,J5 invalidClass
+    class OUT1,OUT2,OUT3 outputClass
+    class TL,V3 alertClass

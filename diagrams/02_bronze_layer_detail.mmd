@@ -1,0 +1,81 @@
+%%{init: {'theme':'base', 'themeVariables': { 'primaryColor':'#CD7F32','primaryTextColor':'#fff','primaryBorderColor':'#8B4513','lineColor':'#F8B229','secondaryColor':'#006100','tertiaryColor':'#fff'}}}%%
+
+graph TB
+    subgraph "RAW DATA SOURCES"
+        CSV1[fa:fa-file-csv feature_attributes.csv<br/>13 columns x 41K rows]
+        CSV2[fa:fa-file-csv feature_financials.csv<br/>13 columns x 41K rows]
+        CSV3[fa:fa-file-csv feature_clickstream.csv<br/>20 columns x 1M+ rows]
+        CSV4[fa:fa-file-csv lms_loan_daily.csv<br/>8 columns x 500K rows]
+    end
+
+    subgraph "BRONZE PROCESSOR"
+        BP[fa:fa-cog Bronze Processor Class<br/>bronze_processing.py]
+
+        subgraph "Ingestion Pipeline"
+            I1[fa:fa-upload Read CSV Files<br/>pd.read_csv]
+            I2[fa:fa-calendar Add Metadata<br/>snapshot_date, ingestion_timestamp]
+            I3[fa:fa-compress Convert to Parquet<br/>PyArrow engine]
+            I4[fa:fa-folder-open Partition by Date<br/>snapshot_date=YYYY-MM-DD]
+        end
+
+        subgraph "Validation Framework"
+            V1[fa:fa-check-square Schema Validation<br/>Expected columns, dtypes]
+            V2[fa:fa-hashtag Row Count Validation<br/>Min: 100 rows]
+            V3[fa:fa-clone Duplicate Detection<br/>Primary key: Customer_ID]
+            V4[fa:fa-exclamation-triangle Missing Value Check<br/>Critical columns]
+        end
+
+        subgraph "Validation Results"
+            R1{fa:fa-question All Checks Pass?}
+            R2[fa:fa-times-circle CRITICAL Error<br/>Stop Pipeline]
+            R3[fa:fa-exclamation WARNING<br/>Log & Continue]
+            R4[fa:fa-check-circle SUCCESS<br/>Proceed to Silver]
+        end
+    end
+
+    subgraph "BRONZE STORAGE"
+        OUT1[fa:fa-database datamart/bronze/attributes/<br/>snapshot_date=2023-01-01/<br/>data.parquet]
+        OUT2[fa:fa-database datamart/bronze/financials/<br/>snapshot_date=2023-01-01/<br/>data.parquet]
+        OUT3[fa:fa-database datamart/bronze/clickstream/<br/>snapshot_date=2023-01-01/<br/>data.parquet]
+        OUT4[fa:fa-database datamart/bronze/loans/<br/>snapshot_date=2023-01-01/<br/>data.parquet]
+    end
+
+    subgraph "MONITORING"
+        L1[fa:fa-file-alt Structured Logging<br/>Timestamp, Level, Message]
+        L2[fa:fa-chart-bar Metrics Tracking<br/>Rows ingested, Duplicates found]
+    end
+
+    %% Flow
+    CSV1 --> BP
+    CSV2 --> BP
+    CSV3 --> BP
+    CSV4 --> BP
+
+    BP --> I1 --> I2 --> I3 --> I4
+
+    I4 --> V1 --> V2 --> V3 --> V4 --> R1
+
+    R1 -->|Critical Failure| R2
+    R1 -->|Warning| R3 --> OUT1 & OUT2 & OUT3 & OUT4
+    R1 -->|Success| R4 --> OUT1 & OUT2 & OUT3 & OUT4
+
+    BP -.-> L1
+    V1 & V2 & V3 & V4 -.-> L2
+
+    %% Styling
+    classDef csvClass fill:#90EE90,stroke:#006400,stroke-width:2px,color:#000
+    classDef processClass fill:#CD7F32,stroke:#8B4513,stroke-width:3px,color:#fff
+    classDef validateClass fill:#FFA500,stroke:#FF8C00,stroke-width:2px,color:#000
+    classDef storageClass fill:#4682B4,stroke:#000080,stroke-width:2px,color:#fff
+    classDef successClass fill:#32CD32,stroke:#006400,stroke-width:2px,color:#fff
+    classDef errorClass fill:#DC143C,stroke:#8B0000,stroke-width:2px,color:#fff
+    classDef warnClass fill:#FFD700,stroke:#DAA520,stroke-width:2px,color:#000
+
+    class CSV1,CSV2,CSV3,CSV4 csvClass
+    class BP,I1,I2,I3,I4 processClass
+    class V1,V2,V3,V4,R1 validateClass
+    class OUT1,OUT2,OUT3,OUT4 storageClass
+    class R4 successClass
+    class R2 errorClass
+    class R3 warnClass
+    class L1,L2 validateClass

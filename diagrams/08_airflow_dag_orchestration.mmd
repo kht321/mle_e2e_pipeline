@@ -1,0 +1,132 @@
+%%{init: {'theme':'base', 'themeVariables': { 'primaryColor':'#9370DB','primaryTextColor':'#fff','primaryBorderColor':'#4B0082','lineColor':'#32CD32','secondaryColor':'#006100','tertiaryColor':'#fff'}}}%%
+
+graph TB
+    subgraph "APACHE AIRFLOW DAG"
+        DAG[fa:fa-project-diagram ml_pipeline_end_to_end<br/>ml_pipeline_dag.py]
+
+        subgraph "DAG Configuration"
+            CFG1[fa:fa-calendar Schedule: Monthly<br/>start_date: 2023-01-01]
+            CFG2[fa:fa-clock catchup: True<br/>Enables backfill]
+            CFG3[fa:fa-redo max_active_runs: 1<br/>Sequential execution]
+            CFG4[fa:fa-user Owner: mle_team]
+        end
+    end
+
+    subgraph "TASK SEQUENCE (7 Tasks)"
+        T1[fa:fa-upload Task 1: ingest_bronze_layer<br/>PythonOperator<br/>Execution: ~1s]
+        T2[fa:fa-broom Task 2: process_silver_layer<br/>PythonOperator<br/>Execution: ~2s]
+        T3[fa:fa-gem Task 3: create_gold_layer<br/>PythonOperator<br/>Execution: ~42s]
+
+        subgraph "Parallel Branch 1"
+            T4[fa:fa-brain Task 4: train_ml_models<br/>PythonOperator<br/>Execution: ~11s]
+        end
+
+        subgraph "Parallel Branch 2"
+            T5[fa:fa-chart-line Task 5: generate_predictions<br/>PythonOperator<br/>Execution: ~1s]
+        end
+
+        T6[fa:fa-tachometer-alt Task 6: monitor_model<br/>PythonOperator<br/>Execution: ~60s]
+        T7[fa:fa-chart-bar Task 7: create_visualizations<br/>PythonOperator<br/>Execution: ~15s]
+    end
+
+    subgraph "TASK DEPENDENCIES"
+        DEP[fa:fa-sitemap Dependency Graph]
+        DEP1[T1 >> T2 >> T3]
+        DEP2[T3 >> [T4, T5]]
+        DEP3[[T4, T5] >> T6 >> T7]
+    end
+
+    subgraph "DOCKER INFRASTRUCTURE"
+        subgraph "PostgreSQL"
+            PG[fa:fa-database PostgreSQL 13<br/>Metadata DB + Backend]
+            PG1[Port: 5432<br/>Database: airflow]
+        end
+
+        subgraph "Airflow Scheduler"
+            SCH[fa:fa-clock Scheduler Container<br/>Task scheduling & execution]
+            SCH1[Executor: LocalExecutor<br/>Concurrency: 4]
+        end
+
+        subgraph "Airflow Webserver"
+            WEB[fa:fa-globe Webserver Container<br/>UI & API]
+            WEB1[Port: 8080<br/>Credentials: admin/admin]
+        end
+
+        subgraph "Airflow Init"
+            INIT[fa:fa-play Init Container<br/>DB migration & user setup]
+        end
+    end
+
+    subgraph "VOLUMES & PERSISTENCE"
+        VOL1[fa:fa-folder-open ./dags → /opt/airflow/dags<br/>DAG definitions]
+        VOL2[fa:fa-folder-open ./utils → /opt/airflow/utils<br/>Python modules]
+        VOL3[fa:fa-folder-open ./data → /opt/airflow/data<br/>Raw CSV files]
+        VOL4[fa:fa-folder-open ./datamart → /opt/airflow/datamart<br/>Bronze/Silver/Gold layers]
+        VOL5[fa:fa-folder-open ./models → /opt/airflow/models<br/>Model artifacts]
+        VOL6[fa:fa-folder-open ./monitoring → /opt/airflow/monitoring<br/>Reports & plots]
+        VOL7[fa:fa-folder-open ./config → /opt/airflow/config<br/>pipeline_config.yaml]
+    end
+
+    subgraph "EXECUTION FLOW"
+        E1[fa:fa-play Scheduler picks up DAG run]
+        E2[fa:fa-check Checks dependencies]
+        E3[fa:fa-rocket Queues ready tasks]
+        E4[fa:fa-cog LocalExecutor runs tasks]
+        E5[fa:fa-save Updates task state in PostgreSQL]
+        E6[fa:fa-chart-line UI displays progress]
+    end
+
+    subgraph "BACKFILL CAPABILITY"
+        BF1[fa:fa-history Backfill Command<br/>airflow dags backfill]
+        BF2[fa:fa-calendar Date Range<br/>--start-date --end-date]
+        BF3[fa:fa-fast-forward Process Historical Data<br/>25 monthly snapshots]
+        BF4[fa:fa-check-circle Results<br/>Complete time series analysis]
+    end
+
+    subgraph "MONITORING & LOGS"
+        LOG1[fa:fa-file-alt Task Logs<br/>stdout/stderr capture]
+        LOG2[fa:fa-chart-pie DAG Run History<br/>Success/failure tracking]
+        LOG3[fa:fa-bell Email Alerts<br/>On task failure]
+    end
+
+    %% Flow
+    DAG --> CFG1 & CFG2 & CFG3 & CFG4
+
+    CFG1 & CFG2 --> T1 --> T2 --> T3
+    T3 --> T4 & T5
+    T4 --> T6
+    T5 --> T6
+    T6 --> T7
+
+    DAG -.-> DEP --> DEP1 --> DEP2 --> DEP3
+
+    INIT --> PG
+    PG --> SCH & WEB
+    SCH --> T1
+
+    VOL1 & VOL2 & VOL3 & VOL4 & VOL5 & VOL6 & VOL7 -.-> SCH
+
+    SCH --> E1 --> E2 --> E3 --> E4 --> E5
+    E5 --> E6
+
+    CFG2 --> BF1 --> BF2 --> BF3 --> BF4
+
+    E4 --> LOG1
+    E5 --> LOG2
+    E5 -.-> LOG3
+
+    %% Styling
+    classDef dagClass fill:#9370DB,stroke:#4B0082,stroke-width:3px,color:#fff
+    classDef taskClass fill:#4169E1,stroke:#000080,stroke-width:2px,color:#fff
+    classDef infraClass fill:#2F4F4F,stroke:#000000,stroke-width:2px,color:#fff
+    classDef volumeClass fill:#FFD700,stroke:#DAA520,stroke-width:2px,color:#000
+    classDef execClass fill:#32CD32,stroke:#006400,stroke-width:2px,color:#fff
+    classDef backfillClass fill:#FF6347,stroke:#DC143C,stroke-width:2px,color:#fff
+
+    class DAG,CFG1,CFG2,CFG3,CFG4 dagClass
+    class T1,T2,T3,T4,T5,T6,T7 taskClass
+    class PG,PG1,SCH,SCH1,WEB,WEB1,INIT infraClass
+    class VOL1,VOL2,VOL3,VOL4,VOL5,VOL6,VOL7 volumeClass
+    class E1,E2,E3,E4,E5,E6 execClass
+    class BF1,BF2,BF3,BF4 backfillClass
+    class LOG1,LOG2,LOG3 execClass

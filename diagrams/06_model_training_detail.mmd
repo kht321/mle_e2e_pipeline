@@ -1,0 +1,128 @@
+%%{init: {'theme':'base', 'themeVariables': { 'primaryColor':'#4169E1','primaryTextColor':'#fff','primaryBorderColor':'#000080','lineColor':'#32CD32','secondaryColor':'#006100','tertiaryColor':'#fff'}}}%%
+
+graph TB
+    subgraph "DATA PREPARATION"
+        DP1[fa:fa-database Load Feature Store<br/>94 features]
+        DP2[fa:fa-tags Load Label Store<br/>Default labels]
+        DP3[fa:fa-link Merge on Keys<br/>Customer_ID + snapshot_dates]
+        DP4[fa:fa-table 10,253 total samples]
+    end
+
+    subgraph "TEMPORAL SPLIT"
+        TS1[fa:fa-calendar Train Period<br/>2023-01-01 to 2023-06-30]
+        TS2[fa:fa-calendar Test Period<br/>2023-07-01 to 2023-12-31]
+        TS3[fa:fa-chart-pie Train: 3,698 samples<br/>Test: 2,441 samples]
+        TS4[fa:fa-balance-scale Class Distribution<br/>Non-default: Default ≈ 2.7:1]
+    end
+
+    subgraph "PREPROCESSING PIPELINE"
+        PP1[fa:fa-cog sklearn Pipeline<br/>ColumnTransformer]
+
+        subgraph "Categorical Features (8)"
+            CAT1[fa:fa-list Occupation, Payment_Behaviour<br/>Credit_Mix, etc.]
+            CAT2[fa:fa-code OneHotEncoder<br/>handle_unknown='ignore']
+        end
+
+        subgraph "Numerical Features (86)"
+            NUM1[fa:fa-hashtag Income, Debt, EMI<br/>Clickstream aggregations, etc.]
+            NUM2[fa:fa-chart-line StandardScaler<br/>Mean=0, Std=1]
+        end
+    end
+
+    subgraph "MODEL TRAINING"
+        MT[fa:fa-brain Train 4 Algorithms]
+
+        subgraph "Logistic Regression"
+            LR1[fa:fa-wave-square Hyperparameters<br/>C=1.0, max_iter=1000]
+            LR2[fa:fa-balance-scale class_weight='balanced']
+            LR3[fa:fa-chart-bar Results<br/>ROC-AUC: 0.852<br/>Training: 7.6s]
+        end
+
+        subgraph "Random Forest"
+            RF1[fa:fa-tree Hyperparameters<br/>n_estimators=200, max_depth=20]
+            RF2[fa:fa-balance-scale class_weight='balanced']
+            RF3[fa:fa-chart-bar Results<br/>ROC-AUC: 0.864<br/>Training: 7.2s]
+        end
+
+        subgraph "XGBoost"
+            XGB1[fa:fa-rocket Hyperparameters<br/>n_estimators=200, max_depth=5<br/>learning_rate=0.1]
+            XGB2[fa:fa-weight scale_pos_weight=3]
+            XGB3[fa:fa-trophy Results<br/>ROC-AUC: 0.869 ⭐<br/>Training: 9.0s]
+        end
+
+        subgraph "LightGBM"
+            LGB1[fa:fa-bolt Hyperparameters<br/>n_estimators=200, max_depth=10<br/>learning_rate=0.1]
+            LGB2[fa:fa-balance-scale is_unbalance=true]
+            LGB3[fa:fa-chart-bar Results<br/>ROC-AUC: 0.866<br/>Training: 7.8s]
+        end
+    end
+
+    subgraph "MODEL EVALUATION"
+        EVAL[fa:fa-check-circle Evaluation on Test Set]
+
+        subgraph "Metrics Computed"
+            M1[fa:fa-percentage Accuracy, Precision, Recall]
+            M2[fa:fa-chart-area ROC-AUC, PR-AUC]
+            M3[fa:fa-th Confusion Matrix]
+            M4[fa:fa-clock Training Time]
+        end
+    end
+
+    subgraph "MODEL SELECTION"
+        SEL1{fa:fa-trophy Select Best Model<br/>Primary: ROC-AUC}
+        SEL2[fa:fa-medal WINNER: XGBoost<br/>ROC-AUC: 0.869]
+        SEL3[fa:fa-info-circle Decision Criteria<br/>Highest ROC-AUC<br/>Good precision-recall balance<br/>Acceptable training time]
+    end
+
+    subgraph "MODEL ARTIFACTS"
+        ART1[fa:fa-save best_model.joblib<br/>703 KB serialized pipeline]
+        ART2[fa:fa-file-code model_metadata.json<br/>Metrics, version, timestamp]
+        ART3[fa:fa-database Model Versioning<br/>best_model_v_20251021_180659.joblib]
+    end
+
+    subgraph "CONFUSION MATRIX (XGBoost)"
+        CM[fa:fa-table Test Set Results<br/>2,441 samples]
+        CM1[fa:fa-check True Negative: 1,548<br/>True Positive: 468]
+        CM2[fa:fa-times False Positive: 187<br/>False Negative: 238]
+        CM3[fa:fa-percent Accuracy: 82.6%<br/>Precision: 71.5%<br/>Recall: 66.3%]
+    end
+
+    %% Flow
+    DP1 & DP2 --> DP3 --> DP4
+
+    DP4 --> TS1 & TS2 --> TS3 --> TS4
+
+    TS4 --> PP1
+    PP1 --> CAT1 --> CAT2
+    PP1 --> NUM1 --> NUM2
+
+    CAT2 & NUM2 --> MT
+
+    MT --> LR1 --> LR2 --> LR3
+    MT --> RF1 --> RF2 --> RF3
+    MT --> XGB1 --> XGB2 --> XGB3
+    MT --> LGB1 --> LGB2 --> LGB3
+
+    LR3 & RF3 & XGB3 & LGB3 --> EVAL
+
+    EVAL --> M1 & M2 & M3 & M4
+
+    M1 & M2 --> SEL1
+    SEL1 --> SEL2 --> SEL3
+
+    SEL3 --> ART1 & ART2 & ART3
+
+    XGB3 --> CM --> CM1 --> CM2 --> CM3
+
+    %% Styling
+    classDef dataClass fill:#87CEEB,stroke:#4682B4,stroke-width:2px,color:#000
+    classDef modelClass fill:#4169E1,stroke:#000080,stroke-width:3px,color:#fff
+    classDef winnerClass fill:#FFD700,stroke:#DAA520,stroke-width:3px,color:#000
+    classDef processClass fill:#98FB98,stroke:#32CD32,stroke-width:2px,color:#000
+    classDef artifactClass fill:#9370DB,stroke:#4B0082,stroke-width:2px,color:#fff
+
+    class DP1,DP2,DP3,DP4,TS1,TS2,TS3,TS4 dataClass
+    class MT,LR1,LR2,RF1,RF2,LGB1,LGB2,PP1 modelClass
+    class XGB1,XGB2,XGB3,SEL2 winnerClass
+    class EVAL,M1,M2,M3,M4,CAT1,CAT2,NUM1,NUM2 processClass
+    class ART1,ART2,ART3,CM,CM1,CM2,CM3 artifactClass
