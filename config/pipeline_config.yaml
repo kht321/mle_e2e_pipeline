@@ -1,0 +1,138 @@
+# ML Pipeline Configuration
+# Version: 1.0.0
+
+project:
+  name: "loan-default-prediction"
+  version: "1.0.0"
+  description: "End-to-end ML pipeline for loan default prediction"
+
+paths:
+  data_dir: "data"
+  bronze_dir: "datamart/bronze"
+  silver_dir: "datamart/silver"
+  gold_dir: "datamart/gold"
+  models_dir: "models"
+  monitoring_dir: "monitoring"
+  plots_dir: "monitoring/plots"
+
+data_sources:
+  clickstream:
+    file: "feature_clickstream.csv"
+    primary_keys: ["Customer_ID", "snapshot_date"]
+  attributes:
+    file: "features_attributes.csv"
+    primary_keys: ["Customer_ID", "snapshot_date"]
+  financials:
+    file: "features_financials.csv"
+    primary_keys: ["Customer_ID", "snapshot_date"]
+  loans:
+    file: "lms_loan_daily.csv"
+    primary_keys: ["loan_id", "Customer_ID", "snapshot_date"]
+
+temporal:
+  start_date: "2023-01-01"
+  end_date: "2024-03-01"
+  train_start: "2023-01-01"
+  train_end: "2023-09-30"
+  test_start: "2023-10-01"
+  test_end: "2024-03-01"
+  snapshot_frequency: "monthly"  # first of month
+
+model:
+  label_definition:
+    mob_months: 6  # Months on book
+    dpd_threshold: 30  # Days past due threshold for default
+
+  algorithms:
+    - name: "logistic_regression"
+      enabled: true
+    - name: "random_forest"
+      enabled: true
+    - name: "xgboost"
+      enabled: true
+    - name: "lightgbm"
+      enabled: true
+
+  evaluation_metrics:
+    primary: "roc_auc"  # Metric to select best model
+    secondary: ["f1", "precision", "recall", "accuracy"]
+
+  hyperparameters:
+    logistic_regression:
+      C: [0.1, 1.0, 10.0]
+      max_iter: 1000
+      class_weight: "balanced"
+
+    random_forest:
+      n_estimators: [100, 200]
+      max_depth: [10, 20, 30]
+      min_samples_split: [2, 5]
+      class_weight: "balanced"
+
+    xgboost:
+      n_estimators: [100, 200]
+      max_depth: [3, 5, 7]
+      learning_rate: [0.01, 0.1]
+      scale_pos_weight: 3  # Handle class imbalance
+
+    lightgbm:
+      n_estimators: [100, 200]
+      max_depth: [5, 10]
+      learning_rate: [0.01, 0.1]
+      is_unbalance: true
+
+feature_engineering:
+  outlier_handling:
+    method: "quantile"  # quantile, iqr, or zscore
+    lower_quantile: 0.01
+    upper_quantile: 0.95
+
+  categorical_encoding:
+    method: "onehot"  # onehot or target
+    handle_unknown: "ignore"
+
+  null_imputation:
+    categorical: "mode"  # mode or constant
+    numerical: "median"  # median, mean, or constant
+
+  scaling:
+    method: "standard"  # standard, minmax, or robust
+
+monitoring:
+  performance_metrics:
+    - "accuracy"
+    - "precision"
+    - "recall"
+    - "f1"
+    - "roc_auc"
+    - "pr_auc"
+
+  stability_metrics:
+    - "psi"  # Population Stability Index
+    - "ks_statistic"  # Kolmogorov-Smirnov
+    - "prediction_drift"
+    - "label_drift"
+
+  thresholds:
+    psi_warning: 0.1
+    psi_critical: 0.25
+    performance_degradation: 0.05  # 5% drop triggers alert
+
+validation:
+  attributes:
+    age_min: 18
+    age_max: 75
+    ssn_pattern: "^\\d{3}-\\d{2}-\\d{4}$"
+
+  financials:
+    annual_income_min: 0
+    annual_income_max: 10000000
+
+  clickstream:
+    feature_min: -1000
+    feature_max: 10000
+
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "logs/pipeline.log"

@@ -1,0 +1,30 @@
+{
+  "model_name": "xgboost",
+  "version": "v_20251021_182550",
+  "timestamp": "20251021_182550",
+  "metrics": {
+    "model_name": "xgboost",
+    "accuracy": 0.8258910282671037,
+    "precision": 0.7145038167938931,
+    "recall": 0.6628895184135978,
+    "f1": 0.6877296105804556,
+    "roc_auc": 0.8689066951857687,
+    "pr_auc": 0.7474925617557546,
+    "test_samples": 2441,
+    "positive_class_count": 706,
+    "predicted_positive_count": 655,
+    "confusion_matrix": [
+      [
+        1548,
+        187
+      ],
+      [
+        238,
+        468
+      ]
+    ],
+    "training_time": 8.29013
+  },
+  "primary_metric": "roc_auc",
+  "model_path": "models/best_model_v_20251021_182550.joblib"
+}
