@@ -20,9 +20,9 @@ graph TB
             J1[fa:fa-arrow-right For each feature_date]
             J2[fa:fa-calculator Calculate label_date<br/>= feature_date + 6 months]
             J3{fa:fa-question Does label_date<br/>exist in loan data?}
-            J4[fa:fa-link Join features[T] with labels[T+6]]
+            J4[fa:fa-link Join features T with labels T+6]
             J5[fa:fa-times Skip if label unavailable]
-            J6[fa:fa-check Validate: All feature_date < label_date]
+            J6[fa:fa-check Validate: All feature_date less than label_date]
         end
     end
 

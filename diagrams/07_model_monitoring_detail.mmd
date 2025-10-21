@@ -12,9 +12,9 @@ graph TB
 
         subgraph "Performance Metrics"
             PM1[fa:fa-percent Calculate Accuracy<br/>Correct predictions / Total]
-            PM2[fa:fa-crosshairs Calculate Precision<br/>TP / (TP + FP)]
-            PM3[fa:fa-check-double Calculate Recall<br/>TP / (TP + FN)]
-            PM4[fa:fa-balance-scale Calculate F1-Score<br/>Harmonic mean of P & R]
+            PM2[fa:fa-crosshairs Calculate Precision<br/>TP / TP plus FP]
+            PM3[fa:fa-check-double Calculate Recall<br/>TP / TP plus FN]
+            PM4[fa:fa-balance-scale Calculate F1-Score<br/>Harmonic mean of P and R]
             PM5[fa:fa-chart-area Calculate ROC-AUC<br/>Area under ROC curve]
             PM6[fa:fa-chart-line Calculate PR-AUC<br/>Area under PR curve]
         end

@@ -31,9 +31,9 @@ graph TB
 
     subgraph "TASK DEPENDENCIES"
         DEP[fa:fa-sitemap Dependency Graph]
-        DEP1[T1 >> T2 >> T3]
-        DEP2[T3 >> [T4, T5]]
-        DEP3[[T4, T5] >> T6 >> T7]
+        DEP1["T1 >> T2 >> T3"]
+        DEP2["T3 >> T4, T5"]
+        DEP3["T4, T5 >> T6 >> T7"]
     end
 
     subgraph "DOCKER INFRASTRUCTURE"
