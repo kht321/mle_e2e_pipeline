@@ -36,20 +36,20 @@ graph TB
 
     subgraph "PSI CALCULATION DETAIL"
         PSI[fa:fa-calculator PSI Formula]
-        PSI1[fa:fa-divide For each feature bin<br/>PSI_i = (Actual% - Expected%) × ln(Actual% / Expected%)]
-        PSI2[fa:fa-sum Total PSI = Σ PSI_i]
-        PSI3[fa:fa-exclamation-triangle Thresholds<br/>< 0.1: No drift<br/>0.1-0.25: Warning<br/>> 0.25: Critical]
+        PSI1[fa:fa-divide For each feature bin<br/>PSI_i = Actual pct - Expected pct * ln of Actual / Expected]
+        PSI2[fa:fa-sum Total PSI = Sum of PSI_i]
+        PSI3[fa:fa-exclamation-triangle Thresholds<br/>Less than 0.1: No drift<br/>0.1-0.25: Warning<br/>Greater than 0.25: Critical]
     end
 
     subgraph "KS STATISTIC DETAIL"
         KS[fa:fa-chart-line KS Formula]
         KS1[fa:fa-wave-square Max difference between<br/>Cumulative distributions]
-        KS2[fa:fa-exclamation-triangle Thresholds<br/>< 0.2: Stable<br/>0.2-0.3: Monitor<br/>> 0.3: Action needed]
+        KS2[fa:fa-exclamation-triangle Thresholds<br/>Less than 0.2: Stable<br/>0.2-0.3: Monitor<br/>Greater than 0.3: Action needed]
     end
 
     subgraph "MONITORING OUTPUTS"
-        OUT1[fa:fa-file-csv performance_metrics.csv<br/>Snapshot-level metrics<br/>25 rows × 10 columns]
-        OUT2[fa:fa-file-csv stability_metrics.csv<br/>PSI/KS per snapshot<br/>25 rows × feature columns]
+        OUT1[fa:fa-file-csv performance_metrics.csv<br/>Snapshot-level metrics<br/>25 rows x 10 columns]
+        OUT2[fa:fa-file-csv stability_metrics.csv<br/>PSI/KS per snapshot<br/>25 rows x feature columns]
         OUT3[fa:fa-file-code model_monitoring_report.html<br/>Evidently AI interactive report<br/>8.2 MB]
     end
 
