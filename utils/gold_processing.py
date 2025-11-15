@@ -20,6 +20,7 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from sklearn.preprocessing import StandardScaler
 import logging
+from pandas.api.types import is_categorical_dtype
 
 from .config_loader import ConfigLoader
 from .logger import get_logger
@@ -549,8 +550,12 @@ class GoldProcessor:
         logger.info("\nStep 7: Cleaning feature store...")
         pii_cols = ["Name", "SSN"]
         intermediate_cols = ["dpd", "overdue_amt"]
+        label_cols = ["label"]
 
-        cols_to_drop = [c for c in pii_cols + intermediate_cols if c in feature_store.columns]
+        cols_to_drop = [
+            c for c in pii_cols + intermediate_cols + label_cols
+            if c in feature_store.columns
+        ]
         feature_store = feature_store.drop(columns=cols_to_drop)
 
         # Step 8: Handle missing values
@@ -559,8 +564,15 @@ class GoldProcessor:
         # Categorical columns: fill with "Unknown"
         categorical_cols = feature_store.select_dtypes(include=["object", "category"]).columns.tolist()
         for col in categorical_cols:
-            if col not in ["Customer_ID"]:
-                feature_store[col] = feature_store[col].fillna("Unknown")
+            if col in ["Customer_ID"]:
+                continue
+            series = feature_store[col]
+            if is_categorical_dtype(series):
+                if "Unknown" not in series.cat.categories:
+                    series = series.cat.add_categories(["Unknown"])
+                feature_store[col] = series.fillna("Unknown")
+            else:
+                feature_store[col] = series.fillna("Unknown")
 
         # Numeric columns: fill with median
         for col in numeric_cols:

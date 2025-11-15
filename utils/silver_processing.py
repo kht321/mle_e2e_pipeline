@@ -90,6 +90,11 @@ class SilverProcessor:
         if "snapshot_date" in df.columns:
             df["snapshot_date"] = pd.to_datetime(df["snapshot_date"])
 
+        # Normalize Age to numeric values
+        if "Age" in df.columns:
+            df["Age"] = pd.to_numeric(df["Age"], errors="coerce")
+        df = df.dropna(subset=["Age"])
+
         # Validate and clean Age
         age_config = self.validation_config.get("attributes", {})
         age_min = age_config.get("age_min", 18)

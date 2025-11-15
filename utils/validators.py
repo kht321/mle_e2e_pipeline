@@ -248,14 +248,21 @@ class DataValidator:
 
         series = df[column].dropna()
 
-        violations = 0
-        if min_value is not None:
-            violations += (series < min_value).sum()
-        if max_value is not None:
-            violations += (series > max_value).sum()
+        # Coerce non-numeric entries to numeric and treat them as violations
+        numeric_series = pd.to_numeric(series, errors="coerce")
+        non_numeric_mask = numeric_series.isna()
+        non_numeric_count = int(non_numeric_mask.sum())
+        numeric_series = numeric_series.dropna()
 
-        total_valid = len(series)
-        violation_pct = violations / total_valid if total_valid > 0 else 0
+        violations = non_numeric_count
+        if min_value is not None:
+            violations += int((numeric_series < min_value).sum())
+        if max_value is not None:
+            violations += int((numeric_series > max_value).sum())
+
+        total_valid = len(numeric_series)
+        total_checked = total_valid + non_numeric_count
+        violation_pct = violations / total_checked if total_checked > 0 else 0
 
         if violations > 0:
             result = ValidationResult(
@@ -267,10 +274,11 @@ class DataValidator:
                     "column": column,
                     "violations": int(violations),
                     "violation_percentage": float(violation_pct),
+                    "non_numeric_values": non_numeric_count,
                     "min_value": min_value,
                     "max_value": max_value,
-                    "actual_min": float(series.min()),
-                    "actual_max": float(series.max())
+                    "actual_min": float(numeric_series.min()) if total_valid else None,
+                    "actual_max": float(numeric_series.max()) if total_valid else None
                 }
             )
         else:
@@ -281,8 +289,8 @@ class DataValidator:
                 message=f"All values within range [{min_value}, {max_value}]",
                 details={
                     "column": column,
-                    "actual_min": float(series.min()),
-                    "actual_max": float(series.max())
+                    "actual_min": float(numeric_series.min()) if total_valid else None,
+                    "actual_max": float(numeric_series.max()) if total_valid else None
                 }
             )
 

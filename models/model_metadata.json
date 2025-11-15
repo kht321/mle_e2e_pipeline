@@ -1,30 +1,30 @@
 {
-  "model_name": "xgboost",
-  "version": "v_20251021_182938",
-  "timestamp": "20251021_182938",
+  "model_name": "logistic_regression",
+  "version": "v_20251115_025048",
+  "timestamp": "20251115_025048",
   "metrics": {
-    "model_name": "xgboost",
-    "accuracy": 0.8258910282671037,
-    "precision": 0.7145038167938931,
-    "recall": 0.6628895184135978,
-    "f1": 0.6877296105804556,
-    "roc_auc": 0.8689066951857687,
-    "pr_auc": 0.7474925617557546,
+    "model_name": "logistic_regression",
+    "accuracy": 0.7935272429332241,
+    "precision": 0.6139954853273137,
+    "recall": 0.7705382436260623,
+    "f1": 0.6834170854271356,
+    "roc_auc": 0.8654284804597889,
+    "pr_auc": 0.7430813205250685,
     "test_samples": 2441,
     "positive_class_count": 706,
-    "predicted_positive_count": 655,
+    "predicted_positive_count": 886,
     "confusion_matrix": [
       [
-        1548,
-        187
+        1393,
+        342
       ],
       [
-        238,
-        468
+        162,
+        544
       ]
     ],
-    "training_time": 8.073285
+    "training_time": 2.08899
   },
   "primary_metric": "roc_auc",
-  "model_path": "models/best_model_v_20251021_182938.joblib"
+  "model_path": "models/best_model_v_20251115_025048.joblib"
 }

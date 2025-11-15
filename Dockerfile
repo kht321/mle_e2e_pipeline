@@ -3,7 +3,7 @@
 
 FROM apache/airflow:2.7.3-python3.10
 
-# Switch to root to install system dependencies
+# Switch to root to install system dependencies and Python deps globally
 USER root
 
 # Install system dependencies
@@ -13,14 +13,16 @@ RUN apt-get update && \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Switch back to airflow user
-USER airflow
+# Install Python dependencies globally (disable user-only installs)
+ENV PIP_USER=false
 
 # Copy requirements file
 COPY requirements.txt /tmp/requirements.txt
 
 # Install Python dependencies
-RUN pip install --no-cache-dir -r /tmp/requirements.txt
+RUN python -m pip install --no-cache-dir -r /tmp/requirements.txt
+# Ensure base Airflow installation remains intact after dependency resolution
+RUN python -m pip install --no-cache-dir "apache-airflow==2.7.3"
 
 # Create necessary directories
 RUN mkdir -p \
@@ -31,7 +33,11 @@ RUN mkdir -p \
     /opt/airflow/models \
     /opt/airflow/monitoring \
     /opt/airflow/config \
-    /opt/airflow/logs
+    /opt/airflow/logs && \
+    chown -R airflow:root /opt/airflow
+
+# Restore default pip behavior for runtime installs
+ENV PIP_USER=true
 
 # Set environment variables
 ENV PYTHONPATH="/opt/airflow:${PYTHONPATH}"
@@ -42,5 +48,8 @@ ENV AIRFLOW__CORE__ENABLE_XCOM_PICKLING=True
 # Healthcheck
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
   CMD airflow jobs check --job-type SchedulerJob --hostname "$${HOSTNAME}" || exit 1
+
+# Switch back to airflow user for runtime
+USER airflow
 
 WORKDIR /opt/airflow

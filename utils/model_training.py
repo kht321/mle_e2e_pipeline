@@ -84,6 +84,16 @@ class ModelTrainer:
 
         logger.info(f"ModelTrainer initialized (primary metric: {self.primary_metric})")
 
+    @staticmethod
+    def _resolve_param(params: Dict, key: str, default):
+        """
+        Return scalar hyperparameter values even if config provides lists.
+        """
+        value = params.get(key, default)
+        if isinstance(value, (list, tuple)):
+            return value[0] if value else default
+        return value
+
     def load_data(
         self,
         train_start: Optional[str] = None,
@@ -220,9 +230,9 @@ class ModelTrainer:
         hyperparams = self.config.get("model.hyperparameters.logistic_regression", {})
 
         model = LogisticRegression(
-            C=hyperparams.get("C", 1.0),
-            max_iter=hyperparams.get("max_iter", 1000),
-            class_weight=hyperparams.get("class_weight", "balanced"),
+            C=self._resolve_param(hyperparams, "C", 1.0),
+            max_iter=self._resolve_param(hyperparams, "max_iter", 1000),
+            class_weight=self._resolve_param(hyperparams, "class_weight", "balanced"),
             random_state=42
         )
 
@@ -255,10 +265,10 @@ class ModelTrainer:
         hyperparams = self.config.get("model.hyperparameters.random_forest", {})
 
         model = RandomForestClassifier(
-            n_estimators=hyperparams.get("n_estimators", 100),
-            max_depth=hyperparams.get("max_depth", 20),
-            min_samples_split=hyperparams.get("min_samples_split", 2),
-            class_weight=hyperparams.get("class_weight", "balanced"),
+            n_estimators=self._resolve_param(hyperparams, "n_estimators", 100),
+            max_depth=self._resolve_param(hyperparams, "max_depth", 20),
+            min_samples_split=self._resolve_param(hyperparams, "min_samples_split", 2),
+            class_weight=self._resolve_param(hyperparams, "class_weight", "balanced"),
             random_state=42,
             n_jobs=-1
         )
@@ -295,9 +305,9 @@ class ModelTrainer:
         scale_pos_weight = (y_train == 0).sum() / (y_train == 1).sum()
 
         model = xgb.XGBClassifier(
-            n_estimators=hyperparams.get("n_estimators", 100),
-            max_depth=hyperparams.get("max_depth", 5),
-            learning_rate=hyperparams.get("learning_rate", 0.1),
+            n_estimators=self._resolve_param(hyperparams, "n_estimators", 100),
+            max_depth=self._resolve_param(hyperparams, "max_depth", 5),
+            learning_rate=self._resolve_param(hyperparams, "learning_rate", 0.1),
             scale_pos_weight=scale_pos_weight,
             random_state=42,
             n_jobs=-1
@@ -332,10 +342,10 @@ class ModelTrainer:
         hyperparams = self.config.get("model.hyperparameters.lightgbm", {})
 
         model = lgb.LGBMClassifier(
-            n_estimators=hyperparams.get("n_estimators", 100),
-            max_depth=hyperparams.get("max_depth", 5),
-            learning_rate=hyperparams.get("learning_rate", 0.1),
-            is_unbalance=hyperparams.get("is_unbalance", True),
+            n_estimators=self._resolve_param(hyperparams, "n_estimators", 100),
+            max_depth=self._resolve_param(hyperparams, "max_depth", 5),
+            learning_rate=self._resolve_param(hyperparams, "learning_rate", 0.1),
+            is_unbalance=self._resolve_param(hyperparams, "is_unbalance", True),
             random_state=42,
             n_jobs=-1,
             verbose=-1
