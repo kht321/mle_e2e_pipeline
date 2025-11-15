@@ -1,7 +1,7 @@
 {
   "model_name": "logistic_regression",
-  "version": "v_20251115_025048",
-  "timestamp": "20251115_025048",
+  "version": "v_20251115_025508",
+  "timestamp": "20251115_025508",
   "metrics": {
     "model_name": "logistic_regression",
     "accuracy": 0.7935272429332241,
@@ -23,8 +23,8 @@
         544
       ]
     ],
-    "training_time": 2.08899
+    "training_time": 2.699897
   },
   "primary_metric": "roc_auc",
-  "model_path": "models/best_model_v_20251115_025048.joblib"
+  "model_path": "models/best_model_v_20251115_025508.joblib"
 }
